@@ -1,0 +1,176 @@
+@use '@angular/material' as mat;
+
+// ---------- Tema Material (azul + violeta), claro por padrão ----------
+html {
+  color-scheme: light;
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$violet-palette,
+      theme-type: color-scheme,
+    ),
+    typography: (
+      plain-family: 'Inter, "Segoe UI", Roboto, sans-serif',
+      brand-family: 'Inter, "Segoe UI", Roboto, sans-serif',
+    ),
+    density: 0,
+  ));
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+// ---------- Tokens da aplicação ----------
+:root {
+  --k2-bg: #f4f6fb;
+  --k2-surface: #ffffff;
+  --k2-surface-2: #f8f9fc;
+  --k2-surface-hover: #f1f3fa;
+  --k2-border: #e4e7ef;
+  --k2-text: #1c2033;
+  --k2-text-2: #4b5168;
+  --k2-text-muted: #7a8099;
+
+  --k2-primary: #3657f5;
+  --k2-violet: #7c4dff;
+  --k2-gradient: linear-gradient(135deg, #3657f5 0%, #7c4dff 100%);
+  --k2-primary-soft: #eaeefe;
+  --k2-violet-soft: #f1ebff;
+
+  --k2-success: #138a5b;
+  --k2-success-soft: #e3f6ee;
+  --k2-warning: #b7791f;
+  --k2-warning-soft: #fdf3dc;
+  --k2-danger: #d62f45;
+  --k2-danger-soft: #fdecee;
+
+  // séries de gráficos (validadas para daltonismo)
+  --k2-status-todo: #eb6834;
+  --k2-status-doing: #2a78d6;
+  --k2-status-done: #1baf7a;
+  --k2-prio-low: #1baf7a;
+  --k2-prio-medium: #2a78d6;
+  --k2-prio-high: #eda100;
+  --k2-prio-urgent: #d62f45;
+
+  --k2-sidebar-bg: #10153a;
+  --k2-sidebar-text: #aab1d6;
+  --k2-sidebar-active: rgba(255, 255, 255, 0.08);
+
+  --k2-radius: 14px;
+  --k2-radius-sm: 10px;
+  --k2-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 16px rgba(16, 24, 40, 0.06);
+  --k2-shadow-lg: 0 8px 30px rgba(16, 24, 40, 0.12);
+}
+
+html.dark {
+  --k2-bg: #0e1124;
+  --k2-surface: #171b33;
+  --k2-surface-2: #1d2240;
+  --k2-surface-hover: #232949;
+  --k2-border: #2a3052;
+  --k2-text: #eceefa;
+  --k2-text-2: #c3c7dd;
+  --k2-text-muted: #9097b5;
+  --k2-primary-soft: #232d5c;
+  --k2-violet-soft: #2c2557;
+  --k2-success: #3ccf91;
+  --k2-success-soft: #173a2f;
+  --k2-warning: #f0b54a;
+  --k2-warning-soft: #3a2f17;
+  --k2-danger: #ff6b7d;
+  --k2-danger-soft: #3d1c25;
+  --k2-status-todo: #d95926;
+  --k2-status-doing: #3987e5;
+  --k2-status-done: #199e70;
+  --k2-prio-low: #199e70;
+  --k2-prio-medium: #3987e5;
+  --k2-prio-high: #c98500;
+  --k2-prio-urgent: #e5484d;
+  --k2-sidebar-bg: #0a0d22;
+  --k2-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+// ---------- Base ----------
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--k2-bg);
+  color: var(--k2-text);
+  font-family: Inter, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+* { box-sizing: border-box; }
+a { color: var(--k2-primary); text-decoration: none; }
+h1, h2, h3, h4 { margin: 0; color: var(--k2-text); }
+
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+// ---------- Utilitários de layout ----------
+.page { padding: 24px 28px 40px; max-width: 1440px; margin: 0 auto; }
+@media (max-width: 768px) { .page { padding: 16px 16px 32px; } }
+
+.card {
+  background: var(--k2-surface);
+  border: 1px solid var(--k2-border);
+  border-radius: var(--k2-radius);
+  box-shadow: var(--k2-shadow);
+}
+.card-pad { padding: 20px; }
+.card-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.card-title .mat-icon { color: var(--k2-text-muted); font-size: 20px; width: 20px; height: 20px; }
+
+.row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.spacer { flex: 1 1 auto; }
+.muted { color: var(--k2-text-muted); }
+.small { font-size: 12px; }
+.text-danger { color: var(--k2-danger); }
+.w-100 { width: 100%; }
+
+.toolbar {
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px;
+  .mat-mdc-form-field { min-width: 180px; }
+  .search { flex: 1 1 240px; max-width: 360px; }
+}
+.toolbar .mat-mdc-form-field-subscript-wrapper { display: none; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+.form-grid .full { grid-column: 1 / -1; }
+@media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+// ---------- Tabelas ----------
+.table-wrap { overflow-x: auto; }
+table.mat-mdc-table { background: transparent; }
+.mat-mdc-header-cell { font-weight: 600; color: var(--k2-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+.mat-mdc-row.clickable { cursor: pointer; }
+.mat-mdc-row.clickable:hover { background: var(--k2-surface-hover); }
+
+// ---------- Badges ----------
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; line-height: 20px; white-space: nowrap;
+  background: var(--k2-surface-2); color: var(--k2-text-2);
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+}
+
+// ---------- Progress ----------
+.progress { height: 8px; border-radius: 99px; background: var(--k2-surface-2); overflow: hidden; border: 1px solid var(--k2-border); }
+.progress > span { display: block; height: 100%; background: var(--k2-gradient); border-radius: 99px; transition: width 0.4s ease; }
+
+// ---------- Snackbar ----------
+.mat-mdc-snack-bar-container {
+  &.toast-success { --mat-snack-bar-container-color: #12805a; --mat-snack-bar-supporting-text-color: #fff; --mat-snack-bar-button-color: #fff; }
+  &.toast-error { --mat-snack-bar-container-color: #c22a3e; --mat-snack-bar-supporting-text-color: #fff; --mat-snack-bar-button-color: #fff; }
+  &.toast-info { --mat-snack-bar-container-color: #2b3170; --mat-snack-bar-supporting-text-color: #fff; --mat-snack-bar-button-color: #c9cfff; }
+}
+
+// ---------- Diálogos ----------
+.mat-mdc-dialog-container { --mdc-dialog-container-shape: 16px; }
+.mat-mdc-dialog-title { font-weight: 600 !important; }
+.dialog-actions { padding: 8px 24px 20px !important; }
+
+// Botão com gradiente
+.btn-gradient.mat-mdc-unelevated-button:not(:disabled) { background: var(--k2-gradient); color: #fff; }

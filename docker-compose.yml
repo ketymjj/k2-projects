@@ -1,0 +1,22 @@
+# Banco de dados para AMBIENTE LOCAL de desenvolvimento.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: k2projects-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: k2projects
+      POSTGRES_USER: k2
+      POSTGRES_PASSWORD: k2_local_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - k2projects-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U k2 -d k2projects"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  k2projects-data:
