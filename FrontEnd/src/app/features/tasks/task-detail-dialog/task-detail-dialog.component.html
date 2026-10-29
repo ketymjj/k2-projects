@@ -1,0 +1,95 @@
+@if (loading() && !detail()) {
+  <k2-loading [message]="'tasks.detail.loading' | transloco" />
+} @else if (error()) {
+  <k2-error [message]="errorText()" (retry)="load(currentId)" />
+} @else if (detail(); as d) {
+  <div class="head">
+    <div class="crumbs muted small">
+      <a (click)="goToProject(d.task.projectId)">{{ d.task.projectName }}</a>
+      @if (d.task.parentTaskId) {
+        <mat-icon>chevron_right</mat-icon>
+        <a (click)="load(d.task.parentTaskId!)">{{ d.task.parentTaskTitle }}</a>
+      }
+    </div>
+    <h2 class="title">{{ d.task.title }}</h2>
+    <div class="row">
+      <k2-task-status [status]="d.task.status" />
+      <k2-priority [priority]="d.task.priority" />
+      @if (d.task.isOverdue) { <span class="badge overdue"><mat-icon>alarm</mat-icon> {{ 'tasks.detail.overdue' | transloco }}</span> }
+    </div>
+    <button mat-icon-button class="close" mat-dialog-close [attr.aria-label]="'common.close' | transloco"><mat-icon>close</mat-icon></button>
+  </div>
+
+  <mat-dialog-content class="content">
+    <div class="grid">
+      <div class="main">
+        @if (d.task.canChangeStatus) {
+          <div class="status-change">
+            <span class="label">{{ 'tasks.detail.changeStatus' | transloco }}</span>
+            <mat-button-toggle-group [value]="d.task.status" (change)="changeStatus($event.value)" [disabled]="busy()" hideSingleSelectionIndicator>
+              @for (s of statuses; track s.value) {
+                <mat-button-toggle [value]="s.value"><mat-icon [style.color]="s.color">{{ s.icon }}</mat-icon> {{ s.labelKey | transloco }}</mat-button-toggle>
+              }
+            </mat-button-toggle-group>
+          </div>
+        }
+
+        <h4>{{ 'tasks.detail.description' | transloco }}</h4>
+        <p class="description">{{ d.description || ('tasks.detail.noDescription' | transloco) }}</p>
+
+        <div class="subtasks">
+          <div class="row">
+            <h4>{{ 'tasks.detail.subtasks' | transloco }} <span class="muted">({{ d.task.completedSubtaskCount }}/{{ d.task.subtaskCount }})</span></h4>
+            <span class="spacer"></span>
+            @if (d.task.canEdit) {
+              <button mat-button (click)="newSubtask(d)"><mat-icon>add</mat-icon> {{ 'tasks.newSubtask' | transloco }}</button>
+            }
+          </div>
+          @for (s of d.subtasks; track s.id) {
+            <div class="subtask" (click)="load(s.id)">
+              <mat-icon [class.done]="s.status === 'Concluido'">{{ s.status === 'Concluido' ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+              <span class="st-title" [class.done]="s.status === 'Concluido'">{{ s.title }}</span>
+              <k2-avatar [name]="s.assignedToName" [size]="24" [tooltip]="true" />
+              <k2-task-status [status]="s.status" />
+            </div>
+          } @empty {
+            <p class="muted small">{{ 'tasks.detail.noSubtasks' | transloco }}</p>
+          }
+        </div>
+
+        <mat-divider />
+        <k2-task-comments [taskId]="d.task.id" />
+      </div>
+
+      <aside class="side">
+        <div class="field"><span class="label">{{ 'tasks.detail.assignee' | transloco }}</span>
+          <span class="value"><k2-avatar [name]="d.task.assignedToName" [size]="26" /> {{ d.task.assignedToName ?? ('common.noAssignee' | transloco) }}</span>
+        </div>
+        <div class="field"><span class="label">{{ 'tasks.detail.due' | transloco }}</span>
+          <span class="value" [class.text-danger]="d.task.isOverdue"><mat-icon>event</mat-icon> {{ fmt(d.task.dueDate) }}</span>
+          @if (d.task.dueDate && d.task.status !== 'Concluido') { <span class="muted small">{{ rel(d.task.dueDate) }}</span> }
+        </div>
+        <div class="field"><span class="label">{{ 'tasks.detail.start' | transloco }}</span><span class="value"><mat-icon>play_arrow</mat-icon> {{ fmt(d.task.startDate) }}</span></div>
+        @if (d.task.completedAt) {
+          <div class="field"><span class="label">{{ 'tasks.detail.completedAt' | transloco }}</span><span class="value"><mat-icon>task_alt</mat-icon> {{ fmtDateTime(d.task.completedAt) }}</span></div>
+        }
+        <div class="field"><span class="label">{{ 'tasks.detail.createdBy' | transloco }}</span><span class="value"><k2-avatar [name]="d.createdByName" [size]="26" /> {{ d.createdByName }}</span></div>
+        <div class="field"><span class="label">{{ 'tasks.detail.createdAt' | transloco }}</span><span class="value">{{ fmtDateTime(d.task.createdAt) }}</span></div>
+        @if (d.task.updatedAt) {
+          <div class="field"><span class="label">{{ 'tasks.detail.updatedAt' | transloco }}</span><span class="value">{{ fmtDateTime(d.task.updatedAt) }}</span></div>
+        }
+      </aside>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="dialog-actions">
+    @if (d.task.canEdit) {
+      <button mat-button class="danger" (click)="remove(d)"><mat-icon>delete</mat-icon> {{ 'common.delete' | transloco }}</button>
+    }
+    <span class="spacer"></span>
+    <button mat-button mat-dialog-close>{{ 'common.close' | transloco }}</button>
+    @if (d.task.canEdit) {
+      <button mat-flat-button class="btn-gradient" (click)="edit(d)"><mat-icon>edit</mat-icon> {{ 'common.edit' | transloco }}</button>
+    }
+  </mat-dialog-actions>
+}

@@ -5,9 +5,9 @@ import { firstValueFrom } from 'rxjs';
 import { t } from '../../core/i18n/i18n-state';
 import { ProjectsApi } from '../../core/services/api.services';
 import { ToastService } from '../../core/services/toast.service';
-import { ConfirmService } from '../../shared/components/confirm-dialog.component';
+import { ConfirmService } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { ProjectListItem } from '../../shared/models/models';
-import { ProjectFormDialogComponent } from './project-form-dialog.component';
+import { ProjectFormDialogComponent } from './project-form-dialog/project-form-dialog.component';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectActionsService {

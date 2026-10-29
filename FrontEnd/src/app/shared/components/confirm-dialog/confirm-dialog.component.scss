@@ -1,0 +1,6 @@
+.title { display: flex; align-items: center; gap: 10px; }
+.title mat-icon { color: var(--k2-primary); }
+.title mat-icon.danger { color: var(--k2-danger); }
+.message { white-space: pre-line; color: var(--k2-text-2); margin-top: 0; }
+.hint { margin-bottom: 8px; }
+.btn-danger:not(:disabled) { background: var(--k2-danger) !important; color: #fff !important; }

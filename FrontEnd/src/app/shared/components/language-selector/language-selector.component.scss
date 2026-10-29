@@ -1,0 +1,9 @@
+.trigger { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 6px 0 10px; border-radius: 10px; cursor: pointer;
+           border: 1px solid var(--k2-border); background: var(--k2-surface); color: var(--k2-text); font: inherit; font-weight: 600; font-size: 13px; }
+.trigger:hover { background: var(--k2-surface-hover); }
+.trigger mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--k2-text-muted); }
+.option { display: flex; align-items: center; gap: 10px; }
+.option span { color: var(--k2-text-2); }
+.check { color: var(--k2-primary); margin: 0 0 0 8px !important; }
+.active { background: var(--k2-primary-soft); }
+@media (max-width: 640px) { .trigger.compact .code { display: none; } }

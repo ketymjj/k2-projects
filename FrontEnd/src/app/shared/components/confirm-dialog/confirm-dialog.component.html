@@ -1,0 +1,19 @@
+<h2 mat-dialog-title class="title">
+  <mat-icon [class.danger]="data.danger">{{ data.danger ? 'warning' : 'help' }}</mat-icon>
+  {{ data.title }}
+</h2>
+<mat-dialog-content>
+  <p class="message">{{ data.message }}</p>
+  @if (data.typeToConfirm) {
+    <p class="hint">{{ 'confirm.typeToConfirm' | transloco }} <strong>{{ data.typeToConfirm }}</strong>:</p>
+    <mat-form-field appearance="outline" class="w-100">
+      <input matInput [ngModel]="typed()" (ngModelChange)="typed.set($event)" autocomplete="off" cdkFocusInitial />
+    </mat-form-field>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-button [mat-dialog-close]="false">{{ 'common.cancel' | transloco }}</button>
+  <button mat-flat-button [class.btn-danger]="data.danger" [disabled]="!canConfirm()" [mat-dialog-close]="true">
+    {{ data.confirmText ?? ('confirm.default' | transloco) }}
+  </button>
+</mat-dialog-actions>

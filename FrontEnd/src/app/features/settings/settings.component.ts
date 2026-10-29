@@ -14,11 +14,12 @@ import { I18nService, LANG_OPTIONS } from '../../core/i18n/i18n.service';
 import { ProfileApi } from '../../core/services/api.services';
 import { PreferencesService, ThemeMode } from '../../core/services/preferences.service';
 import { ToastService } from '../../core/services/toast.service';
-import { AvatarComponent, RoleBadgeComponent } from '../../shared/components/badges.component';
-import { FlagComponent } from '../../shared/components/language-selector.component';
-import { PageHeaderComponent } from '../../shared/components/page-header.component';
+import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
+import { RoleBadgeComponent } from '../../shared/components/role-badge/role-badge.component';
+import { FlagComponent } from '../../shared/components/flag/flag.component';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { apiErrorMessage, apiFieldErrors } from '../../shared/utils';
-import { PASSWORD_PATTERN } from '../users/user-form-dialog.component';
+import { PASSWORD_PATTERN } from '../users/user-form-dialog/user-form-dialog.component';
 
 function passwordsMatch(group: AbstractControl): ValidationErrors | null {
   return group.get('newPassword')?.value === group.get('confirm')?.value ? null : { mismatch: true };
@@ -30,105 +31,8 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
   imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatButtonToggleModule, MatSlideToggleModule,
     MatIconModule, MatProgressSpinnerModule, TranslocoPipe, PageHeaderComponent, AvatarComponent, RoleBadgeComponent, FlagComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="page narrow">
-      <k2-page-header [title]="'settings.title' | transloco" [subtitle]="'settings.subtitle' | transloco" />
-
-      <div class="card card-pad section">
-        <div class="profile-head">
-          <k2-avatar [name]="auth.user()?.name ?? null" [size]="56" />
-          <div>
-            <h3>{{ auth.user()?.name }}</h3>
-            @if (auth.user(); as u) { <k2-role [role]="u.role" /> }
-          </div>
-        </div>
-        <form [formGroup]="profile" (ngSubmit)="saveProfile()" class="form-grid" novalidate>
-          <mat-form-field>
-            <mat-label>{{ 'settings.name' | transloco }}</mat-label>
-            <input matInput formControlName="name" maxlength="120" />
-            @if (profile.controls.name.hasError('required')) { <mat-error>{{ 'validation.nameRequired' | transloco }}</mat-error> }
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>{{ 'settings.email' | transloco }}</mat-label>
-            <input matInput type="email" formControlName="email" />
-            @if (profile.controls.email.hasError('required')) { <mat-error>{{ 'validation.emailRequired' | transloco }}</mat-error> }
-            @else if (profile.controls.email.hasError('email')) { <mat-error>{{ 'validation.emailInvalid' | transloco }}</mat-error> }
-            @if (profile.controls.email.hasError('server')) { <mat-error>{{ profile.controls.email.getError('server') }}</mat-error> }
-          </mat-form-field>
-          <div class="full actions">
-            <button mat-flat-button class="btn-gradient" type="submit" [disabled]="savingProfile() || profile.pristine">
-              @if (savingProfile()) { <mat-spinner diameter="18" /> } @else { {{ 'settings.saveProfile' | transloco }} }
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <div class="card card-pad section">
-        <div class="card-title"><mat-icon>lock</mat-icon> {{ 'settings.changePassword' | transloco }}</div>
-        <form [formGroup]="password" (ngSubmit)="savePassword()" class="form-grid" novalidate>
-          <mat-form-field class="full">
-            <mat-label>{{ 'settings.currentPassword' | transloco }}</mat-label>
-            <input matInput type="password" formControlName="currentPassword" autocomplete="current-password" />
-            @if (password.controls.currentPassword.hasError('required')) { <mat-error>{{ 'validation.currentPasswordRequired' | transloco }}</mat-error> }
-            @if (password.controls.currentPassword.hasError('server')) { <mat-error>{{ password.controls.currentPassword.getError('server') }}</mat-error> }
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>{{ 'settings.newPassword' | transloco }}</mat-label>
-            <input matInput type="password" formControlName="newPassword" autocomplete="new-password" />
-            <mat-hint>{{ 'settings.passwordHint' | transloco }}</mat-hint>
-            @if (password.controls.newPassword.hasError('required')) { <mat-error>{{ 'validation.newPasswordRequired' | transloco }}</mat-error> }
-            @else if (password.controls.newPassword.hasError('pattern')) { <mat-error>{{ 'validation.passwordPattern' | transloco }}</mat-error> }
-            @if (password.controls.newPassword.hasError('server')) { <mat-error>{{ password.controls.newPassword.getError('server') }}</mat-error> }
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>{{ 'settings.confirmPassword' | transloco }}</mat-label>
-            <input matInput type="password" formControlName="confirm" autocomplete="new-password" />
-          </mat-form-field>
-          @if (password.hasError('mismatch') && password.controls.confirm.touched) { <p class="full error">{{ 'validation.passwordsMismatch' | transloco }}</p> }
-          <div class="full actions">
-            <button mat-flat-button type="submit" [disabled]="savingPassword()">
-              @if (savingPassword()) { <mat-spinner diameter="18" /> } @else { {{ 'settings.changePasswordButton' | transloco }} }
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <div class="card card-pad section">
-        <div class="card-title"><mat-icon>tune</mat-icon> {{ 'settings.preferences' | transloco }}</div>
-        <div class="pref">
-          <div><strong>{{ 'settings.language' | transloco }}</strong><span class="muted small">{{ 'settings.languageHint' | transloco }}</span></div>
-          <mat-button-toggle-group [value]="i18n.lang()" (change)="setLanguage($event.value)" hideSingleSelectionIndicator [attr.aria-label]="'settings.language' | transloco">
-            @for (o of languages; track o.code) {
-              <mat-button-toggle [value]="o.code"><span class="lang-opt"><k2-flag [lang]="o.code" /> {{ o.short }}</span></mat-button-toggle>
-            }
-          </mat-button-toggle-group>
-        </div>
-        <div class="pref">
-          <div><strong>{{ 'settings.theme' | transloco }}</strong><span class="muted small">{{ 'settings.themeHint' | transloco }}</span></div>
-          <mat-button-toggle-group [value]="prefs.preferences().theme" (change)="setTheme($event.value)" hideSingleSelectionIndicator>
-            <mat-button-toggle value="light"><mat-icon>light_mode</mat-icon> {{ 'settings.light' | transloco }}</mat-button-toggle>
-            <mat-button-toggle value="dark"><mat-icon>dark_mode</mat-icon> {{ 'settings.dark' | transloco }}</mat-button-toggle>
-          </mat-button-toggle-group>
-        </div>
-        <div class="pref">
-          <div><strong>{{ 'settings.realtimeToasts' | transloco }}</strong><span class="muted small">{{ 'settings.realtimeToastsHint' | transloco }}</span></div>
-          <mat-slide-toggle [checked]="prefs.preferences().realtimeToasts" (change)="prefs.update({ realtimeToasts: $event.checked })" [attr.aria-label]="'settings.realtimeToasts' | transloco" />
-        </div>
-      </div>
-    </div>
-  `,
-  styles: `
-    .narrow { max-width: 820px; }
-    .section { margin-bottom: 16px; }
-    .profile-head { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
-    .profile-head h3 { font-size: 18px; margin-bottom: 6px; }
-    .actions { display: flex; justify-content: flex-end; }
-    .error { color: var(--k2-danger); font-size: 13px; margin: 0; }
-    .pref { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid var(--k2-border); flex-wrap: wrap; }
-    .pref > div { display: flex; flex-direction: column; gap: 2px; }
-    .pref mat-icon { font-size: 18px; width: 18px; height: 18px; vertical-align: middle; }
-    .lang-opt { display: inline-flex; align-items: center; gap: 8px; }
-  `,
+  templateUrl: './settings.component.html',
+  styleUrl: './settings.component.scss',
 })
 export class SettingsComponent {
   readonly auth = inject(AuthService);

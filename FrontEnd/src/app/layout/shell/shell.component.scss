@@ -1,0 +1,4 @@
+.container { height: 100vh; background: var(--k2-bg); }
+.nav { width: 248px; border-right: 0; background: var(--k2-sidebar-bg); }
+.content { display: flex; flex-direction: column; }
+main { flex: 1; }

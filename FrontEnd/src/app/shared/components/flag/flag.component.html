@@ -1,0 +1,5 @@
+@if (lang() === 'pt-BR') {
+  <svg viewBox="0 0 28 20" aria-hidden="true"><rect width="28" height="20" rx="3" fill="#229e45"/><path d="M14 3 25 10 14 17 3 10z" fill="#f8e509"/><circle cx="14" cy="10" r="4.2" fill="#2b49a3"/><path d="M10.1 9.2c2.6-.5 5.4.1 7.7 1.6" stroke="#fff" stroke-width=".8" fill="none"/></svg>
+} @else {
+  <svg viewBox="0 0 28 20" aria-hidden="true"><defs><clipPath id="us-r"><rect width="28" height="20" rx="3"/></clipPath></defs><g clip-path="url(#us-r)"><rect width="28" height="20" fill="#fff"/><g fill="#d22f3c">@for (i of stripes; track i) {<rect [attr.y]="i * 3.08" width="28" height="1.54"/>}</g><rect width="12" height="10.8" fill="#2b3a8f"/><g fill="#fff">@for (s of stars; track $index) {<circle [attr.cx]="s[0]" [attr.cy]="s[1]" r=".55"/>}</g></g></svg>
+}

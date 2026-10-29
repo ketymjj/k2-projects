@@ -11,8 +11,10 @@ import { NotificationsApi } from '../../core/services/api.services';
 import { NotificationCenterService } from '../../core/services/notification-center.service';
 import { RealtimeService } from '../../core/services/realtime.service';
 import { ToastService } from '../../core/services/toast.service';
-import { PageHeaderComponent } from '../../shared/components/page-header.component';
-import { EmptyStateComponent, ErrorStateComponent, LoadingComponent } from '../../shared/components/states.component';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { ErrorStateComponent } from '../../shared/components/error-state/error-state.component';
+import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { NOTIFICATION_ICONS } from '../../shared/models/labels';
 import { AppNotification, PagedResult } from '../../shared/models/models';
 import { apiErrorMessage, notificationText, timeAgo } from '../../shared/utils';
@@ -23,60 +25,8 @@ import { TaskDialogsService } from '../tasks/task-dialogs.service';
   imports: [MatButtonModule, MatButtonToggleModule, MatIconModule, MatPaginatorModule, MatTooltipModule, TranslocoPipe, PageHeaderComponent,
     LoadingComponent, ErrorStateComponent, EmptyStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="page">
-      <k2-page-header [title]="'notifications.title' | transloco" [subtitle]="'notifications.subtitle' | transloco">
-        <button mat-stroked-button (click)="markAll()" [disabled]="center.unreadCount() === 0"><mat-icon>done_all</mat-icon> {{ 'notifications.markAllRead' | transloco }}</button>
-      </k2-page-header>
-
-      <div class="card">
-        <div class="card-pad head">
-          <mat-button-toggle-group [value]="onlyUnread()" (change)="setFilter($event.value)" hideSingleSelectionIndicator>
-            <mat-button-toggle [value]="false">{{ 'notifications.all' | transloco }}</mat-button-toggle>
-            <mat-button-toggle [value]="true">{{ 'notifications.unread' | transloco: { count: center.unreadCount() } }}</mat-button-toggle>
-          </mat-button-toggle-group>
-        </div>
-
-        @if (loading() && !page()) {
-          <k2-loading />
-        } @else if (error()) {
-          <k2-error [message]="errorText()" (retry)="load()" />
-        } @else if (page()?.items?.length === 0) {
-          <k2-empty icon="notifications_off" [title]="(onlyUnread() ? 'notifications.emptyUnread' : 'notifications.emptyAll') | transloco"
-                    [message]="'notifications.emptyMessage' | transloco" />
-        } @else {
-          @for (n of page()?.items ?? []; track n.id) {
-            <div class="notif" [class.unread]="!n.isRead">
-              <span class="icon" [style.color]="icon(n).color" [style.background]="icon(n).color + '1a'"><mat-icon>{{ icon(n).icon }}</mat-icon></span>
-              <div class="text">
-                <strong>{{ text(n).title }}</strong>
-                <span>{{ text(n).message }}</span>
-                <span class="muted small">{{ ago(n.createdAt) }}</span>
-              </div>
-              <div class="actions">
-                @if (n.relatedTaskId) {
-                  <button mat-stroked-button (click)="openTask(n)"><mat-icon>open_in_new</mat-icon> {{ 'notifications.openTask' | transloco }}</button>
-                }
-                @if (!n.isRead) {
-                  <button mat-icon-button (click)="markRead(n)" [matTooltip]="'notifications.markRead' | transloco" [attr.aria-label]="'notifications.markRead' | transloco"><mat-icon>done</mat-icon></button>
-                }
-              </div>
-            </div>
-          }
-          <mat-paginator [length]="page()?.totalCount ?? 0" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[10, 20, 50]" (page)="onPage($event)" />
-        }
-      </div>
-    </div>
-  `,
-  styles: `
-    .head { padding-bottom: 8px; }
-    .notif { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-top: 1px solid var(--k2-border); }
-    .notif.unread { background: color-mix(in srgb, var(--k2-primary) 5%, transparent); box-shadow: inset 3px 0 0 var(--k2-primary); }
-    .icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; }
-    .text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .actions { display: flex; align-items: center; gap: 4px; }
-    @media (max-width: 640px) { .notif { flex-wrap: wrap; } .actions { width: 100%; justify-content: flex-end; } }
-  `,
+  templateUrl: './notifications.component.html',
+  styleUrl: './notifications.component.scss',
 })
 export class NotificationsComponent {
   readonly center = inject(NotificationCenterService);

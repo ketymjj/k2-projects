@@ -1,0 +1,129 @@
+<div class="page">
+  <a routerLink="/projects" class="back"><mat-icon>arrow_back</mat-icon> {{ 'projects.back' | transloco }}</a>
+
+  @if (loading() && !detail()) {
+    <k2-loading />
+  } @else if (error()) {
+    <k2-error [message]="errorText()" (retry)="loadDetail()" />
+  } @else if (detail(); as d) {
+    <div class="card card-pad hero">
+      <div class="hero-main">
+        <div class="row">
+          <h1>{{ d.project.name }}</h1>
+          <k2-project-status [status]="d.project.status" />
+        </div>
+        <p class="muted desc">{{ d.project.description || ('projects.noDescription' | transloco) }}</p>
+        <div class="facts">
+          <span><mat-icon>person</mat-icon> {{ d.project.ownerName }}</span>
+          <span><mat-icon>event</mat-icon>
+            @if (d.project.startDate || d.project.dueDate) { {{ fmt(d.project.startDate) }} → {{ fmt(d.project.dueDate) }} }
+            @else { {{ 'projects.noDates' | transloco }} }
+          </span>
+          <span><mat-icon>group</mat-icon> {{ 'projects.participants' | transloco: { count: d.members.length + 1 } }}</span>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="ring" [style.--p]="d.project.progress">
+          <span>{{ d.project.progress }}%</span>
+        </div>
+        <span class="muted small">{{ 'projects.completedOf' | transloco: { done: d.project.completedTaskCount, total: d.project.taskCount } }}</span>
+      </div>
+      <div class="hero-actions">
+        <button mat-stroked-button (click)="openKanban()"><mat-icon>view_kanban</mat-icon> {{ 'nav.kanban' | transloco }}</button>
+        @if (d.project.canManage) {
+          <button mat-stroked-button (click)="edit()"><mat-icon>edit</mat-icon> {{ 'common.edit' | transloco }}</button>
+          <button mat-stroked-button class="danger" (click)="remove()"><mat-icon>delete</mat-icon> {{ 'common.delete' | transloco }}</button>
+        }
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="card stat"><span class="dot" style="background: var(--k2-status-todo)"></span><strong>{{ d.todoCount }}</strong><span class="muted">{{ 'projects.stats.todo' | transloco }}</span></div>
+      <div class="card stat"><span class="dot" style="background: var(--k2-status-doing)"></span><strong>{{ d.inProgressCount }}</strong><span class="muted">{{ 'projects.stats.inProgress' | transloco }}</span></div>
+      <div class="card stat"><span class="dot" style="background: var(--k2-status-done)"></span><strong>{{ d.project.completedTaskCount }}</strong><span class="muted">{{ 'projects.stats.completed' | transloco }}</span></div>
+      <div class="card stat"><span class="dot" style="background: var(--k2-danger)"></span><strong>{{ d.project.overdueTaskCount }}</strong><span class="muted">{{ 'projects.stats.overdue' | transloco }}</span></div>
+    </div>
+
+    <div class="card">
+      <mat-tab-group mat-stretch-tabs="false" animationDuration="150ms">
+        <mat-tab [label]="'projects.tabs.tasks' | transloco">
+          <div class="toolbar card-pad tab-toolbar">
+            <mat-form-field class="search">
+              <mat-icon matPrefix>search</mat-icon>
+              <input matInput [placeholder]="'projects.searchTasks' | transloco" [formControl]="search" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>{{ 'common.status' | transloco }}</mat-label>
+              <mat-select [formControl]="status">
+                <mat-option [value]="null">{{ 'common.all' | transloco }}</mat-option>
+                @for (s of statuses; track s.value) { <mat-option [value]="s.value">{{ s.labelKey | transloco }}</mat-option> }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>{{ 'common.priority' | transloco }}</mat-label>
+              <mat-select [formControl]="priority">
+                <mat-option [value]="null">{{ 'common.allFem' | transloco }}</mat-option>
+                @for (p of priorities; track p.value) { <mat-option [value]="p.value">{{ p.labelKey | transloco }}</mat-option> }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>{{ 'common.assignee' | transloco }}</mat-label>
+              <mat-select [formControl]="assignee">
+                <mat-option [value]="null">{{ 'common.all' | transloco }}</mat-option>
+                @for (m of participants(); track m.id) { <mat-option [value]="m.id">{{ m.name }}</mat-option> }
+              </mat-select>
+            </mat-form-field>
+            <span class="spacer"></span>
+            @if (d.project.canManage) {
+              <button mat-flat-button class="btn-gradient" (click)="newTask()"><mat-icon>add</mat-icon> {{ 'tasks.new' | transloco }}</button>
+            }
+          </div>
+          @if (tasksLoading()) { <mat-progress-bar mode="indeterminate" /> }
+          @if (tasks(); as page) {
+            @if (page.items.length) {
+              <k2-task-table [tasks]="page.items" [showProject]="false" />
+              <mat-paginator [length]="page.totalCount" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+                             [pageSizeOptions]="[10, 20, 50]" (page)="onPage($event)" />
+            } @else {
+              <k2-empty icon="task" [title]="'projects.tasksEmptyTitle' | transloco"
+                        [message]="(hasFilters() ? 'projects.tasksEmptyFiltered' : 'projects.tasksEmptyNone') | transloco" />
+            }
+          }
+        </mat-tab>
+
+        <mat-tab [label]="'projects.tabs.members' | transloco: { count: d.members.length + 1 }">
+          <div class="card-pad">
+            @if (d.project.canManage) {
+              <div class="row add-member">
+                <mat-form-field class="member-select">
+                  <mat-label>{{ 'projects.members.add' | transloco }}</mat-label>
+                  <mat-select [(ngModel)]="newMemberId">
+                    @for (u of availableUsers(); track u.id) { <mat-option [value]="u.id">{{ u.name }} · {{ u.email }}</mat-option> }
+                  </mat-select>
+                </mat-form-field>
+                <button mat-flat-button (click)="addMember()" [disabled]="!newMemberId || busy()"><mat-icon>person_add</mat-icon> {{ 'projects.members.addButton' | transloco }}</button>
+              </div>
+            }
+            <div class="member owner">
+              <k2-avatar [name]="d.project.ownerName" [size]="38" />
+              <div class="grow"><strong>{{ d.project.ownerName }}</strong><span class="muted small">{{ 'projects.members.ownerLabel' | transloco }}</span></div>
+              <span class="badge">{{ 'projects.members.ownerBadge' | transloco }}</span>
+            </div>
+            @for (m of d.members; track m.userId) {
+              <div class="member">
+                <k2-avatar [name]="m.name" [size]="38" />
+                <div class="grow"><strong>{{ m.name }}</strong><span class="muted small">{{ m.email }} · {{ 'projects.members.openTasks' | transloco: { count: m.openTaskCount } }}</span></div>
+                <k2-role [role]="m.role" />
+                @if (d.project.canManage) {
+                  <button mat-icon-button (click)="removeMember(m)" [matTooltip]="'projects.members.removeTooltip' | transloco" [attr.aria-label]="'projects.members.removeTooltip' | transloco"><mat-icon>person_remove</mat-icon></button>
+                }
+              </div>
+            } @empty {
+              <k2-empty icon="group_add" [title]="'projects.members.emptyTitle' | transloco" [message]="'projects.members.emptyMessage' | transloco" />
+            }
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  }
+</div>

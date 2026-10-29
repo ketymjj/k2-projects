@@ -1,0 +1,43 @@
+<div class="table-wrap">
+  <table mat-table [dataSource]="tasks()">
+    <ng-container matColumnDef="title">
+      <th mat-header-cell *matHeaderCellDef>{{ 'tasks.columns.task' | transloco }}</th>
+      <td mat-cell *matCellDef="let t">
+        <div class="title-cell">
+          <span class="t" [class.done]="t.status === 'Concluido'">{{ t.title }}</span>
+          <span class="muted small meta">
+            @if (showProject()) { <span><mat-icon>folder</mat-icon>{{ t.projectName }}</span> }
+            @if (t.parentTaskTitle) { <span><mat-icon>subdirectory_arrow_right</mat-icon>{{ t.parentTaskTitle }}</span> }
+            @if (t.subtaskCount) { <span><mat-icon>account_tree</mat-icon>{{ t.completedSubtaskCount }}/{{ t.subtaskCount }}</span> }
+            @if (t.commentCount) { <span><mat-icon>chat_bubble</mat-icon>{{ t.commentCount }}</span> }
+          </span>
+        </div>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>{{ 'tasks.columns.status' | transloco }}</th>
+      <td mat-cell *matCellDef="let t"><k2-task-status [status]="t.status" /></td>
+    </ng-container>
+    <ng-container matColumnDef="priority">
+      <th mat-header-cell *matHeaderCellDef>{{ 'tasks.columns.priority' | transloco }}</th>
+      <td mat-cell *matCellDef="let t"><k2-priority [priority]="t.priority" /></td>
+    </ng-container>
+    <ng-container matColumnDef="assignee">
+      <th mat-header-cell *matHeaderCellDef>{{ 'tasks.columns.assignee' | transloco }}</th>
+      <td mat-cell *matCellDef="let t">
+        <span class="assignee"><k2-avatar [name]="t.assignedToName" [size]="26" /> {{ t.assignedToName ?? '—' }}</span>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="due">
+      <th mat-header-cell *matHeaderCellDef>{{ 'tasks.columns.due' | transloco }}</th>
+      <td mat-cell *matCellDef="let t">
+        <span class="due" [class.overdue]="t.isOverdue" [matTooltip]="t.status !== 'Concluido' ? rel(t.dueDate) : ''">
+          @if (t.isOverdue) { <mat-icon>alarm</mat-icon> }
+          {{ fmt(t.dueDate) }}
+        </span>
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: columns" class="clickable" (click)="open(row)"></tr>
+  </table>
+</div>

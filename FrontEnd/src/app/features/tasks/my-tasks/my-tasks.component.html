@@ -1,0 +1,34 @@
+<div class="page">
+  <k2-page-header [title]="'myTasks.title' | transloco" [subtitle]="'myTasks.subtitle' | transloco" />
+
+  @if (data()) {
+    <div class="summary">
+      @for (g of groups(); track g.key) {
+        <button class="card stat" [class.active]="selected() === $index" (click)="selected.set($index)">
+          <span class="icon" [style.color]="g.color"><mat-icon>{{ g.icon }}</mat-icon></span>
+          <span><strong>{{ g.items.length }}</strong><span class="muted">{{ g.labelKey | transloco }}</span></span>
+        </button>
+      }
+    </div>
+  }
+
+  <div class="card">
+    @if (loading() && !data()) {
+      <k2-loading />
+    } @else if (error()) {
+      <k2-error [message]="errorText()" (retry)="load()" />
+    } @else {
+      <mat-tab-group [selectedIndex]="selected()" (selectedIndexChange)="selected.set($event)" mat-stretch-tabs="false">
+        @for (g of groups(); track g.key) {
+          <mat-tab [label]="(g.labelKey | transloco) + ' (' + g.items.length + ')'">
+            @if (g.items.length) {
+              <k2-task-table [tasks]="g.items" />
+            } @else {
+              <k2-empty [icon]="g.icon" [title]="g.emptyKey | transloco" />
+            }
+          </mat-tab>
+        }
+      </mat-tab-group>
+    }
+  </div>
+</div>

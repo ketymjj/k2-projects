@@ -1,0 +1,65 @@
+<div class="page">
+  <k2-page-header [title]="'kanban.title' | transloco" [subtitle]="'kanban.subtitle' | transloco">
+    <mat-form-field class="project-select" subscriptSizing="dynamic">
+      <mat-label>{{ 'common.project' | transloco }}</mat-label>
+      <mat-select [ngModel]="projectId()" (ngModelChange)="selectProject($event)">
+        @for (p of projects(); track p.id) { <mat-option [value]="p.id">{{ p.name }}</mat-option> }
+      </mat-select>
+    </mat-form-field>
+    @if (canManage()) {
+      <button mat-flat-button class="btn-gradient" (click)="create('AFazer')"><mat-icon>add</mat-icon> {{ 'tasks.new' | transloco }}</button>
+    }
+  </k2-page-header>
+
+  @if (loadingProjects()) {
+    <k2-loading />
+  } @else if (projects().length === 0) {
+    <div class="card"><k2-empty icon="view_kanban" [title]="'kanban.noProjectsTitle' | transloco" [message]="'kanban.noProjectsMessage' | transloco" /></div>
+  } @else if (error()) {
+    <div class="card"><k2-error [message]="errorText()" (retry)="loadBoard()" /></div>
+  } @else {
+    @if (loading()) { <mat-progress-bar mode="indeterminate" class="bar" /> }
+    <div class="board" cdkDropListGroup>
+      @for (col of statuses; track col.value) {
+        <section class="column">
+          <header class="col-head">
+            <span class="dot" [style.background]="col.color"></span>
+            <h3>{{ col.labelKey | transloco }}</h3>
+            <span class="count">{{ columns()[col.value].length }}</span>
+            <span class="spacer"></span>
+            @if (canManage()) {
+              <button mat-icon-button (click)="create(col.value)"
+                      [matTooltip]="'kanban.newIn' | transloco: { column: (col.labelKey | transloco) }"
+                      [attr.aria-label]="'kanban.newIn' | transloco: { column: (col.labelKey | transloco) }"><mat-icon>add</mat-icon></button>
+            }
+          </header>
+          <div class="list" cdkDropList [id]="col.value" [cdkDropListData]="columns()[col.value]" (cdkDropListDropped)="drop($event)">
+            @for (task of columns()[col.value]; track task.id) {
+              <article class="card task" cdkDrag [cdkDragData]="task" [cdkDragDisabled]="!task.canChangeStatus || saving()"
+                       [class.overdue]="task.isOverdue" [class.locked]="!task.canChangeStatus" (click)="open(task)"
+                       (cdkDragEnded)="lastDragEnd = now()">
+                <div class="task-placeholder" *cdkDragPlaceholder></div>
+                <div class="top">
+                  <k2-priority [priority]="task.priority" />
+                  @if (task.isOverdue) { <span class="late"><mat-icon>alarm</mat-icon> {{ 'tasks.detail.overdue' | transloco }}</span> }
+                  @if (!task.canChangeStatus) { <mat-icon class="lock" [matTooltip]="'kanban.locked' | transloco">lock</mat-icon> }
+                </div>
+                <h4 [class.done]="task.status === 'Concluido'">{{ task.title }}</h4>
+                @if (task.parentTaskTitle) { <div class="parent muted small"><mat-icon>subdirectory_arrow_right</mat-icon>{{ task.parentTaskTitle }}</div> }
+                <footer>
+                  <span class="due" [class.text-danger]="task.isOverdue"><mat-icon>event</mat-icon>{{ fmt(task.dueDate) }}</span>
+                  @if (task.subtaskCount) { <span class="meta"><mat-icon>account_tree</mat-icon>{{ task.completedSubtaskCount }}/{{ task.subtaskCount }}</span> }
+                  @if (task.commentCount) { <span class="meta"><mat-icon>chat_bubble</mat-icon>{{ task.commentCount }}</span> }
+                  <span class="spacer"></span>
+                  <k2-avatar [name]="task.assignedToName" [size]="26" [tooltip]="true" />
+                </footer>
+              </article>
+            } @empty {
+              <div class="empty-col muted small">{{ 'kanban.dropHere' | transloco }}</div>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  }
+</div>

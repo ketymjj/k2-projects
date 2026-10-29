@@ -7,12 +7,12 @@ export const routes: Routes = [
     path: 'login',
     canActivate: [guestGuard],
     title: 'routes.login',
-    loadComponent: () => import('./core/auth/login.component').then((m) => m.LoginComponent),
+    loadComponent: () => import('./features/auth/login.component').then((m) => m.LoginComponent),
   },
   {
     path: '',
     canActivate: [authGuard],
-    loadComponent: () => import('./layout/shell.component').then((m) => m.ShellComponent),
+    loadComponent: () => import('./layout/shell/shell.component').then((m) => m.ShellComponent),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       {
@@ -21,15 +21,15 @@ export const routes: Routes = [
       },
       {
         path: 'projects', title: 'routes.projects',
-        loadComponent: () => import('./features/projects/project-list.component').then((m) => m.ProjectListComponent),
+        loadComponent: () => import('./features/projects/project-list/project-list.component').then((m) => m.ProjectListComponent),
       },
       {
         path: 'projects/:id', title: 'routes.project',
-        loadComponent: () => import('./features/projects/project-detail.component').then((m) => m.ProjectDetailComponent),
+        loadComponent: () => import('./features/projects/project-detail/project-detail.component').then((m) => m.ProjectDetailComponent),
       },
       {
         path: 'my-tasks', title: 'routes.myTasks',
-        loadComponent: () => import('./features/tasks/my-tasks.component').then((m) => m.MyTasksComponent),
+        loadComponent: () => import('./features/tasks/my-tasks/my-tasks.component').then((m) => m.MyTasksComponent),
       },
       {
         path: 'kanban', title: 'routes.kanban',
@@ -41,7 +41,7 @@ export const routes: Routes = [
       },
       {
         path: 'users', title: 'routes.users', canActivate: [roleGuard('Administrador')],
-        loadComponent: () => import('./features/users/user-list.component').then((m) => m.UserListComponent),
+        loadComponent: () => import('./features/users/user-list/user-list.component').then((m) => m.UserListComponent),
       },
       {
         path: 'notifications', title: 'routes.notifications',

@@ -1,0 +1,9 @@
+.filters { padding-bottom: 0; margin-bottom: 0; }
+table { width: 100%; }
+.name { display: flex; flex-direction: column; padding: 10px 0; max-width: 380px; }
+.desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.owner { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.prog { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+.late { color: var(--k2-danger); display: flex; align-items: center; gap: 2px; }
+.late mat-icon { font-size: 14px; width: 14px; height: 14px; }
+.danger { color: var(--k2-danger); }

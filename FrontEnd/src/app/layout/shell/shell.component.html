@@ -1,0 +1,9 @@
+<mat-sidenav-container class="container">
+  <mat-sidenav #nav class="nav" [mode]="isMobile() ? 'over' : 'side'" [opened]="!isMobile()">
+    <k2-sidebar (navigate)="isMobile() && nav.close()" />
+  </mat-sidenav>
+  <mat-sidenav-content class="content">
+    <k2-header (toggleMenu)="nav.toggle()" />
+    <main><router-outlet /></main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

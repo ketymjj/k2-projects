@@ -11,10 +11,14 @@ import { t } from '../../core/i18n/i18n-state';
 import { DashboardApi } from '../../core/services/api.services';
 import { DataEventsService } from '../../core/services/data-events.service';
 import { PreferencesService } from '../../core/services/preferences.service';
-import { AvatarComponent, PriorityBadgeComponent, ProjectStatusBadgeComponent } from '../../shared/components/badges.component';
-import { ChartComponent, cssVar } from '../../shared/components/chart.component';
-import { PageHeaderComponent } from '../../shared/components/page-header.component';
-import { EmptyStateComponent, ErrorStateComponent, LoadingComponent } from '../../shared/components/states.component';
+import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
+import { PriorityBadgeComponent } from '../../shared/components/priority-badge/priority-badge.component';
+import { ProjectStatusBadgeComponent } from '../../shared/components/project-status-badge/project-status-badge.component';
+import { ChartComponent, cssVar } from '../../shared/components/chart/chart.component';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { ErrorStateComponent } from '../../shared/components/error-state/error-state.component';
+import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { TASK_PRIORITIES, TASK_STATUSES } from '../../shared/models/labels';
 import { Dashboard, TaskItem } from '../../shared/models/models';
 import { apiErrorMessage, formatDate, formatNumber, relativeDue } from '../../shared/utils';
@@ -27,137 +31,8 @@ interface Kpi { labelKey: string; value: number; icon: string; tone: string; }
   imports: [RouterLink, MatIconModule, MatButtonModule, MatTooltipModule, MatProgressBarModule, TranslocoPipe, PageHeaderComponent, ChartComponent,
     LoadingComponent, ErrorStateComponent, EmptyStateComponent, AvatarComponent, PriorityBadgeComponent, ProjectStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="page">
-      <k2-page-header [title]="'dashboard.title' | transloco" [subtitle]="'dashboard.subtitle' | transloco">
-        <button mat-stroked-button (click)="load()" [disabled]="loading()"><mat-icon>refresh</mat-icon> {{ 'common.refresh' | transloco }}</button>
-      </k2-page-header>
-
-      @if (loading() && !data()) {
-        <k2-loading [message]="'dashboard.loading' | transloco" />
-      } @else if (error() && !data()) {
-        <div class="card"><k2-error [message]="errorText()" (retry)="load()" /></div>
-      } @else if (data(); as d) {
-        @if (loading()) { <mat-progress-bar mode="indeterminate" class="bar" /> }
-
-        <div class="kpis">
-          @for (k of kpis(); track k.labelKey) {
-            <div class="card kpi">
-              <span class="kpi-icon" [attr.data-tone]="k.tone"><mat-icon>{{ k.icon }}</mat-icon></span>
-              <div>
-                <div class="kpi-value">{{ num(k.value) }}</div>
-                <div class="kpi-label">{{ k.labelKey | transloco }}</div>
-              </div>
-            </div>
-          }
-        </div>
-
-        <div class="charts">
-          <div class="card card-pad">
-            <div class="card-title"><mat-icon>donut_large</mat-icon> {{ 'dashboard.charts.byStatus' | transloco }}</div>
-            @if (d.totalTasks) {
-              <div class="chart-with-legend">
-                <k2-chart [config]="statusChart()" [height]="190" [label]="'dashboard.charts.byStatus' | transloco" />
-                <ul class="legend">
-                  @for (s of statusLegend(); track s.label) {
-                    <li><i [style.background]="s.color"></i>{{ s.label }}<strong>{{ s.count }}</strong></li>
-                  }
-                </ul>
-              </div>
-            } @else { <k2-empty icon="donut_large" [title]="'dashboard.charts.noTasks' | transloco" /> }
-          </div>
-          <div class="card card-pad">
-            <div class="card-title"><mat-icon>bar_chart</mat-icon> {{ 'dashboard.charts.byPriority' | transloco }}</div>
-            @if (d.totalTasks) {
-              <k2-chart [config]="priorityChart()" [height]="230" [label]="'dashboard.charts.byPriority' | transloco" />
-            } @else { <k2-empty icon="bar_chart" [title]="'dashboard.charts.noTasks' | transloco" /> }
-          </div>
-          <div class="card card-pad">
-            <div class="card-title"><mat-icon>stacked_bar_chart</mat-icon> {{ 'dashboard.charts.projectProgress' | transloco }}</div>
-            @if (d.projectProgress.length) {
-              <k2-chart [config]="progressChart()" [height]="230" [label]="'dashboard.charts.projectProgress' | transloco" />
-            } @else { <k2-empty icon="folder_open" [title]="'dashboard.charts.noProjects' | transloco" /> }
-          </div>
-        </div>
-
-        <div class="lists">
-          <div class="card card-pad">
-            <div class="card-title"><mat-icon>upcoming</mat-icon> {{ 'dashboard.lists.upcoming' | transloco }} <span class="spacer"></span><a routerLink="/my-tasks" class="small">{{ 'common.viewAll' | transloco }}</a></div>
-            @for (task of d.myUpcomingTasks; track task.id) {
-              <button class="item" (click)="openTask(task)">
-                <span class="item-main"><strong>{{ task.title }}</strong><span class="muted small">{{ task.projectName }}</span></span>
-                <span class="item-side">
-                  <k2-priority [priority]="task.priority" />
-                  <span class="small" [class.text-danger]="task.isOverdue">{{ rel(task.dueDate) }}</span>
-                </span>
-              </button>
-            } @empty { <k2-empty icon="task_alt" [title]="'dashboard.lists.noPending' | transloco" [message]="'dashboard.lists.noPendingMessage' | transloco" /> }
-          </div>
-
-          <div class="card card-pad">
-            <div class="card-title"><mat-icon class="danger-icon">alarm</mat-icon> {{ 'dashboard.lists.overdue' | transloco }}</div>
-            @for (task of d.overdueTaskList; track task.id) {
-              <button class="item" (click)="openTask(task)">
-                <span class="item-main"><strong>{{ task.title }}</strong><span class="muted small">{{ task.projectName }} · {{ 'dashboard.lists.dueOn' | transloco: { date: fmt(task.dueDate) } }}</span></span>
-                <k2-avatar [name]="task.assignedToName" [size]="28" [tooltip]="true" />
-              </button>
-            } @empty { <k2-empty icon="verified" [title]="'dashboard.lists.noOverdue' | transloco" /> }
-          </div>
-
-          <div class="card card-pad">
-            <div class="card-title"><mat-icon>history</mat-icon> {{ 'dashboard.lists.recent' | transloco }} <span class="spacer"></span><a routerLink="/projects" class="small">{{ 'common.viewAllMasc' | transloco }}</a></div>
-            @for (p of d.recentProjects; track p.id) {
-              <button class="item" (click)="openProject(p.id)">
-                <span class="item-main">
-                  <strong>{{ p.name }}</strong>
-                  <span class="prog"><span class="progress"><span [style.width.%]="p.progress"></span></span><span class="small">{{ p.progress }}%</span></span>
-                </span>
-                <k2-project-status [status]="p.status" />
-              </button>
-            } @empty { <k2-empty icon="folder_open" [title]="'dashboard.lists.noProjects' | transloco" /> }
-          </div>
-        </div>
-      }
-    </div>
-  `,
-  styles: `
-    .bar { margin-bottom: 12px; border-radius: 4px; }
-    .kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; margin-bottom: 20px; }
-    .kpi { padding: 16px 18px; display: flex; align-items: center; gap: 14px; }
-    .kpi-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; }
-    .kpi-icon[data-tone='blue'] { background: var(--k2-primary-soft); color: var(--k2-primary); }
-    .kpi-icon[data-tone='violet'] { background: var(--k2-violet-soft); color: var(--k2-violet); }
-    .kpi-icon[data-tone='orange'] { background: color-mix(in srgb, var(--k2-status-todo) 14%, transparent); color: var(--k2-status-todo); }
-    .kpi-icon[data-tone='green'] { background: var(--k2-success-soft); color: var(--k2-success); }
-    .kpi-icon[data-tone='red'] { background: var(--k2-danger-soft); color: var(--k2-danger); }
-    .kpi-value { font-size: 26px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
-    .kpi-label { color: var(--k2-text-muted); font-size: 13px; }
-    .charts { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 16px; margin-bottom: 20px; }
-    .chart-with-legend { display: flex; flex-direction: column; gap: 12px; }
-    .legend { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; font-size: 13px; color: var(--k2-text-2); }
-    .legend li { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-    .legend i { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
-    .legend strong { color: var(--k2-text); }
-    .lists { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .charts > *, .lists > * { min-width: 0; }
-    .item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 8px; border: 0; border-bottom: 1px solid var(--k2-border); background: none; cursor: pointer; text-align: left; font: inherit; color: inherit; border-radius: 8px; }
-    .item:last-of-type { border-bottom: 0; }
-    .item:hover { background: var(--k2-surface-hover); }
-    .item-main { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .item-main strong { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .item-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-    .prog { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
-    .prog .progress { flex: 1; max-width: 160px; }
-    .danger-icon { color: var(--k2-danger) !important; }
-    @media (max-width: 1200px) { .charts { grid-template-columns: 1fr 1fr; } .lists { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 760px) {
-      .charts, .lists { grid-template-columns: 1fr; }
-      .kpis { grid-template-columns: 1fr 1fr; gap: 10px; }
-      .kpi { padding: 12px; gap: 10px; }
-      .kpi-icon { width: 36px; height: 36px; }
-      .kpi-value { font-size: 22px; }
-    }
-  `,
+  templateUrl: './dashboard.component.html',
+  styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent {
   private readonly api = inject(DashboardApi);

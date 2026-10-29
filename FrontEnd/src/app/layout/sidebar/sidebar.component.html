@@ -1,0 +1,22 @@
+<nav class="sidebar">
+  <a class="brand" routerLink="/dashboard" (click)="navigate.emit()">
+    <span class="logo">K2</span>
+    <span class="name">{{ 'app.name' | transloco }}</span>
+  </a>
+
+  <div class="section">{{ 'nav.menu' | transloco }}</div>
+  @for (item of items(); track item.route) {
+    <a class="item" [routerLink]="item.route" routerLinkActive="active" (click)="navigate.emit()">
+      <mat-icon>{{ item.icon }}</mat-icon>
+      <span>{{ item.labelKey | transloco }}</span>
+      @if (item.route === '/notifications' && center.unreadCount() > 0) {
+        <span class="count">{{ center.unreadCount() > 99 ? '99+' : center.unreadCount() }}</span>
+      }
+    </a>
+  }
+
+  <div class="grow"></div>
+  <a class="item" routerLink="/settings" routerLinkActive="active" (click)="navigate.emit()">
+    <mat-icon>settings</mat-icon><span>{{ 'nav.settings' | transloco }}</span>
+  </a>
+</nav>

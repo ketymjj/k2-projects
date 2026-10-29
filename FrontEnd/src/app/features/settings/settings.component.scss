@@ -1,0 +1,10 @@
+.narrow { max-width: 820px; }
+.section { margin-bottom: 16px; }
+.profile-head { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.profile-head h3 { font-size: 18px; margin-bottom: 6px; }
+.actions { display: flex; justify-content: flex-end; }
+.error { color: var(--k2-danger); font-size: 13px; margin: 0; }
+.pref { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid var(--k2-border); flex-wrap: wrap; }
+.pref > div { display: flex; flex-direction: column; gap: 2px; }
+.pref mat-icon { font-size: 18px; width: 18px; height: 18px; vertical-align: middle; }
+.lang-opt { display: inline-flex; align-items: center; gap: 8px; }

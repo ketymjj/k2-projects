@@ -1,0 +1,5 @@
+// Estilo base compartilhado pelos badges (status, prioridade, papel).
+:host { display: inline-flex; }
+.badge { border: 1px solid color-mix(in srgb, var(--c) 30%, transparent); background: color-mix(in srgb, var(--c) 12%, transparent); color: var(--k2-text); }
+.badge .dot { background: var(--c); }
+.badge mat-icon { font-size: 15px; width: 15px; height: 15px; color: var(--c); }

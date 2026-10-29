@@ -1,0 +1,7 @@
+.filters { padding-bottom: 0; margin-bottom: 0; }
+table { width: 100%; }
+.user { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+.user > span { display: flex; flex-direction: column; }
+.badge.on { background: var(--k2-success-soft); color: var(--k2-success); }
+.badge.off { background: var(--k2-surface-2); color: var(--k2-text-muted); }
+.actions { text-align: right; white-space: nowrap; }

@@ -1,0 +1,6 @@
+<div class="state">
+  <div class="icon"><mat-icon>{{ icon() }}</mat-icon></div>
+  <strong>{{ title() ?? ('states.emptyTitle' | transloco) }}</strong>
+  @if (message()) { <span>{{ message() }}</span> }
+  <ng-content />
+</div>

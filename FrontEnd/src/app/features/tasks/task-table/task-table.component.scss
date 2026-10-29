@@ -1,0 +1,11 @@
+table { width: 100%; }
+.title-cell { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; }
+.t { font-weight: 500; }
+.t.done { text-decoration: line-through; color: var(--k2-text-muted); }
+.meta { display: flex; gap: 12px; flex-wrap: wrap; }
+.meta span { display: inline-flex; align-items: center; gap: 3px; }
+.meta mat-icon { font-size: 14px; width: 14px; height: 14px; }
+.assignee { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.due { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.due.overdue { color: var(--k2-danger); font-weight: 600; }
+.due mat-icon { font-size: 16px; width: 16px; height: 16px; }

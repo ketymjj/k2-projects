@@ -1,0 +1,92 @@
+<div class="page">
+  <k2-page-header [title]="'projects.title' | transloco" [subtitle]="'projects.subtitle' | transloco">
+    @if (auth.canCreateProjects()) {
+      <button mat-flat-button class="btn-gradient" (click)="create()"><mat-icon>add</mat-icon> {{ 'projects.new' | transloco }}</button>
+    }
+  </k2-page-header>
+
+  <div class="card">
+    <div class="toolbar card-pad filters">
+      <mat-form-field class="search">
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [placeholder]="'projects.search' | transloco" [formControl]="search" />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'common.status' | transloco }}</mat-label>
+        <mat-select [formControl]="status">
+          <mat-option [value]="null">{{ 'common.all' | transloco }}</mat-option>
+          @for (s of statuses; track s.value) { <mat-option [value]="s.value">{{ s.labelKey | transloco }}</mat-option> }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    @if (loading() && page()) { <mat-progress-bar mode="indeterminate" /> }
+
+    @if (loading() && !page()) {
+      <k2-loading />
+    } @else if (error()) {
+      <k2-error [message]="errorText()" (retry)="load()" />
+    } @else if (page()?.items?.length === 0) {
+      <k2-empty icon="folder_open" [title]="'projects.emptyTitle' | transloco"
+                [message]="(search.value || status.value ? 'projects.emptyFiltered' : 'projects.emptyFirst') | transloco">
+        @if (auth.canCreateProjects() && !search.value && !status.value) {
+          <button mat-flat-button class="btn-gradient" (click)="create()"><mat-icon>add</mat-icon> {{ 'projects.new' | transloco }}</button>
+        }
+      </k2-empty>
+    } @else {
+      <div class="table-wrap">
+        <table mat-table [dataSource]="page()?.items ?? []">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>{{ 'projects.columns.project' | transloco }}</th>
+            <td mat-cell *matCellDef="let p">
+              <div class="name"><strong>{{ p.name }}</strong><span class="muted small desc">{{ p.description }}</span></div>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>{{ 'projects.columns.status' | transloco }}</th>
+            <td mat-cell *matCellDef="let p"><k2-project-status [status]="p.status" /></td>
+          </ng-container>
+          <ng-container matColumnDef="owner">
+            <th mat-header-cell *matHeaderCellDef>{{ 'projects.columns.owner' | transloco }}</th>
+            <td mat-cell *matCellDef="let p"><span class="owner"><k2-avatar [name]="p.ownerName" [size]="26" /> {{ p.ownerName }}</span></td>
+          </ng-container>
+          <ng-container matColumnDef="progress">
+            <th mat-header-cell *matHeaderCellDef>{{ 'projects.columns.progress' | transloco }}</th>
+            <td mat-cell *matCellDef="let p">
+              <div class="prog">
+                <div class="progress"><span [style.width.%]="p.progress"></span></div>
+                <span class="small"><strong>{{ p.progress }}%</strong> <span class="muted">· {{ p.completedTaskCount }}/{{ p.taskCount }}</span></span>
+              </div>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="due">
+            <th mat-header-cell *matHeaderCellDef>{{ 'projects.columns.delivery' | transloco }}</th>
+            <td mat-cell *matCellDef="let p">
+              {{ fmt(p.dueDate) }}
+              @if (p.overdueTaskCount) {
+                <div class="late small" [matTooltip]="'projects.overdueTooltip' | transloco"><mat-icon>alarm</mat-icon>{{ 'projects.overdueCount' | transloco: { count: p.overdueTaskCount } }}</div>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let p" (click)="$event.stopPropagation()">
+              <button mat-icon-button [matMenuTriggerFor]="menu" [attr.aria-label]="'projects.actions' | transloco"><mat-icon>more_vert</mat-icon></button>
+              <mat-menu #menu="matMenu" xPosition="before">
+                <button mat-menu-item (click)="open(p)"><mat-icon>visibility</mat-icon> {{ 'projects.viewDetails' | transloco }}</button>
+                <button mat-menu-item (click)="openKanban(p)"><mat-icon>view_kanban</mat-icon> {{ 'projects.openKanban' | transloco }}</button>
+                @if (p.canManage) {
+                  <button mat-menu-item (click)="edit(p)"><mat-icon>edit</mat-icon> {{ 'common.edit' | transloco }}</button>
+                  <button mat-menu-item (click)="remove(p)" class="danger"><mat-icon>delete</mat-icon> {{ 'common.delete' | transloco }}</button>
+                }
+              </mat-menu>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns" class="clickable" (click)="open(row)"></tr>
+        </table>
+      </div>
+      <mat-paginator [length]="page()?.totalCount ?? 0" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+                     [pageSizeOptions]="[10, 20, 50]" (page)="onPage($event)" />
+    }
+  </div>
+</div>

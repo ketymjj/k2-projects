@@ -1,0 +1,64 @@
+<header class="header">
+  <button mat-icon-button class="menu-btn" (click)="toggleMenu.emit()" [attr.aria-label]="'header.openMenu' | transloco"><mat-icon>menu</mat-icon></button>
+  <div class="greeting">
+    <strong>{{ 'header.greeting' | transloco: { name: firstName() } }}</strong>
+    <span class="muted small">{{ today() }}</span>
+  </div>
+  <span class="spacer"></span>
+
+  <span class="live" [class.on]="realtime.connected()"
+        [matTooltip]="(realtime.connected() ? 'header.realtimeOn' : 'header.realtimeOff') | transloco">
+    <span class="dot"></span>
+  </span>
+
+  <span class="bell">
+    <button mat-icon-button [matMenuTriggerFor]="notifMenu" (menuOpened)="center.loadLatest()"
+            [attr.aria-label]="center.unreadCount() ? ('header.notificationsUnread' | transloco: { count: center.unreadCount() }) : ('header.notifications' | transloco)">
+      <mat-icon>notifications</mat-icon>
+    </button>
+    @if (center.unreadCount() > 0) {
+      <span class="bell-count" aria-hidden="true">{{ center.unreadCount() > 99 ? '99+' : center.unreadCount() }}</span>
+    }
+  </span>
+  <mat-menu #notifMenu="matMenu" xPosition="before" class="notif-menu">
+    <div class="menu-head" (click)="$event.stopPropagation()">
+      <strong>{{ 'header.notifications' | transloco }}</strong>
+      <button mat-button (click)="center.markAllRead()" [disabled]="center.unreadCount() === 0">{{ 'header.markAllRead' | transloco }}</button>
+    </div>
+    @if (center.loadingLatest()) { <mat-progress-bar mode="indeterminate" /> }
+    @for (n of center.latest(); track n.id) {
+      <button mat-menu-item class="notif" [class.unread]="!n.isRead" (click)="open(n)">
+        <mat-icon [style.color]="icon(n).color">{{ icon(n).icon }}</mat-icon>
+        <span class="notif-text">
+          <strong>{{ text(n).title }}</strong>
+          <span>{{ text(n).message }}</span>
+          <span class="muted small">{{ ago(n.createdAt) }}</span>
+        </span>
+      </button>
+    } @empty {
+      @if (!center.loadingLatest()) { <div class="menu-empty muted">{{ 'header.noNotifications' | transloco }}</div> }
+    }
+    <mat-divider />
+    <a mat-menu-item routerLink="/notifications"><mat-icon>list</mat-icon> {{ 'header.viewAll' | transloco }}</a>
+  </mat-menu>
+
+  <k2-language-selector [compact]="true" />
+
+  <button class="user" [matMenuTriggerFor]="userMenu" [attr.aria-label]="'header.userMenu' | transloco">
+    <k2-avatar [name]="auth.user()?.name ?? null" [size]="34" />
+    <span class="user-info">
+      <strong>{{ auth.user()?.name }}</strong>
+      <span class="muted small">{{ auth.user()?.email }}</span>
+    </span>
+    <mat-icon>expand_more</mat-icon>
+  </button>
+  <mat-menu #userMenu="matMenu" xPosition="before">
+    <div class="user-head">
+      <strong>{{ auth.user()?.name }}</strong>
+      @if (auth.user(); as u) { <k2-role [role]="u.role" /> }
+    </div>
+    <mat-divider />
+    <a mat-menu-item routerLink="/settings"><mat-icon>settings</mat-icon> {{ 'header.settings' | transloco }}</a>
+    <button mat-menu-item (click)="logout()"><mat-icon>logout</mat-icon> {{ 'header.logout' | transloco }}</button>
+  </mat-menu>
+</header>

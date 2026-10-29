@@ -1,0 +1,18 @@
+<button class="trigger" [class.compact]="compact()" [matMenuTriggerFor]="menu"
+        [attr.aria-label]="'language.change' | transloco" [matTooltip]="'language.change' | transloco">
+  <k2-flag [lang]="current().code" />
+  <span class="code">{{ current().short }}</span>
+  <mat-icon>expand_more</mat-icon>
+</button>
+<mat-menu #menu="matMenu" xPosition="before">
+  @for (o of options; track o.code) {
+    <button mat-menu-item (click)="select(o.code)" [class.active]="o.code === i18n.lang()" role="menuitemradio" [attr.aria-checked]="o.code === i18n.lang()">
+      <span class="option">
+        <k2-flag [lang]="o.code" />
+        <strong>{{ o.short }}</strong>
+        <span>{{ o.nameKey | transloco }}</span>
+        @if (o.code === i18n.lang()) { <mat-icon class="check">check</mat-icon> }
+      </span>
+    </button>
+  }
+</mat-menu>

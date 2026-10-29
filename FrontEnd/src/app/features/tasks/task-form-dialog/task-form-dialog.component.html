@@ -1,0 +1,86 @@
+<h2 mat-dialog-title>{{ (isEdit ? 'tasks.edit' : (data.parentTaskId ? 'tasks.newSubtask' : 'tasks.new')) | transloco }}</h2>
+<form [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <mat-dialog-content>
+    <div class="form-grid">
+      <mat-form-field class="full">
+        <mat-label>{{ 'tasks.form.project' | transloco }}</mat-label>
+        <mat-select formControlName="projectId">
+          @for (p of projects(); track p.id) { <mat-option [value]="p.id">{{ p.name }}</mat-option> }
+        </mat-select>
+        @if (form.controls.projectId.hasError('required')) { <mat-error>{{ 'validation.projectRequired' | transloco }}</mat-error> }
+        @if (!loadingProjects() && projects().length === 0) { <mat-hint>{{ 'tasks.form.noManagedProjects' | transloco }}</mat-hint> }
+      </mat-form-field>
+
+      <mat-form-field class="full">
+        <mat-label>{{ 'tasks.form.title' | transloco }}</mat-label>
+        <input matInput formControlName="title" maxlength="200" />
+        @if (form.controls.title.hasError('required')) { <mat-error>{{ 'validation.titleRequired' | transloco }}</mat-error> }
+        @if (form.controls.title.hasError('server')) { <mat-error>{{ form.controls.title.getError('server') }}</mat-error> }
+      </mat-form-field>
+
+      <mat-form-field class="full">
+        <mat-label>{{ 'tasks.form.description' | transloco }}</mat-label>
+        <textarea matInput formControlName="description" rows="3" maxlength="4000"></textarea>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>{{ 'tasks.form.status' | transloco }}</mat-label>
+        <mat-select formControlName="status">
+          @for (s of statuses; track s.value) { <mat-option [value]="s.value">{{ s.labelKey | transloco }}</mat-option> }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>{{ 'tasks.form.priority' | transloco }}</mat-label>
+        <mat-select formControlName="priority">
+          @for (p of priorities; track p.value) { <mat-option [value]="p.value">{{ p.labelKey | transloco }}</mat-option> }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>{{ 'tasks.form.assignee' | transloco }}</mat-label>
+        <mat-select formControlName="assignedToId">
+          <mat-option [value]="null">{{ 'common.noAssignee' | transloco }}</mat-option>
+          @for (u of people(); track u.id) {
+            <mat-option [value]="u.id">{{ u.name }}@if (u.isOwner) { {{ ' ' + ('tasks.form.ownerSuffix' | transloco) }} }</mat-option>
+          }
+        </mat-select>
+        <mat-hint>{{ 'tasks.form.assigneeHint' | transloco }}</mat-hint>
+        @if (form.controls.assignedToId.hasError('server')) { <mat-error>{{ form.controls.assignedToId.getError('server') }}</mat-error> }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>{{ 'tasks.form.parent' | transloco }}</mat-label>
+        <mat-select formControlName="parentTaskId">
+          <mat-option [value]="null">{{ 'tasks.form.noParent' | transloco }}</mat-option>
+          @for (task of parentOptions(); track task.id) { <mat-option [value]="task.id">{{ task.title }}</mat-option> }
+        </mat-select>
+        @if (form.controls.parentTaskId.hasError('server')) { <mat-error>{{ form.controls.parentTaskId.getError('server') }}</mat-error> }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>{{ 'tasks.form.start' | transloco }}</mat-label>
+        <input matInput [matDatepicker]="startPicker" formControlName="startDate" />
+        <mat-datepicker-toggle matIconSuffix [for]="startPicker" />
+        <mat-datepicker #startPicker />
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>{{ 'tasks.form.due' | transloco }}</mat-label>
+        <input matInput [matDatepicker]="duePicker" formControlName="dueDate" />
+        <mat-datepicker-toggle matIconSuffix [for]="duePicker" />
+        <mat-datepicker #duePicker />
+      </mat-form-field>
+    </div>
+    @if (form.hasError('dateOrder') && (form.touched || form.dirty)) {
+      <p class="form-error">{{ 'validation.taskDateOrder' | transloco }}</p>
+    }
+    @if (generalError()) { <p class="form-error">{{ generalError() }}</p> }
+  </mat-dialog-content>
+  <mat-dialog-actions align="end" class="dialog-actions">
+    <button mat-button type="button" mat-dialog-close>{{ 'common.cancel' | transloco }}</button>
+    <button mat-flat-button class="btn-gradient" type="submit" [disabled]="saving()">
+      @if (saving()) { <mat-spinner diameter="18" /> } @else { {{ (isEdit ? 'common.saveChanges' : 'tasks.form.create') | transloco }} }
+    </button>
+  </mat-dialog-actions>
+</form>

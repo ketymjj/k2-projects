@@ -1,0 +1,52 @@
+<div class="comments">
+  <div class="title"><mat-icon>forum</mat-icon> {{ 'comments.title' | transloco }} <span class="muted">({{ comments().length }})</span></div>
+
+  @if (loading()) {
+    <k2-loading [message]="'comments.loading' | transloco" />
+  } @else {
+    <div class="thread" #thread>
+      @for (c of comments(); track c.id) {
+        <div class="msg" [class.mine]="c.isMine">
+          <k2-avatar [name]="c.userName" [size]="30" />
+          <div class="bubble">
+            <div class="meta">
+              <strong>{{ c.userName }}</strong>
+              <span class="muted small" [matTooltip]="fullDate(c.createdAt)">{{ ago(c.createdAt) }}@if (c.updatedAt) { · {{ 'common.edited' | transloco }} }</span>
+            </div>
+            @if (editingId() === c.id) {
+              <mat-form-field class="w-100 edit">
+                <textarea matInput rows="2" [ngModel]="editText()" (ngModelChange)="editText.set($event)" maxlength="2000"></textarea>
+              </mat-form-field>
+              <div class="row edit-actions">
+                <button mat-button (click)="editingId.set(null)">{{ 'common.cancel' | transloco }}</button>
+                <button mat-flat-button (click)="saveEdit(c)" [disabled]="!editText().trim() || busy()">{{ 'common.save' | transloco }}</button>
+              </div>
+            } @else {
+              <p>{{ c.content }}</p>
+              @if (c.isMine) {
+                <div class="actions">
+                  <button mat-icon-button (click)="startEdit(c)" [matTooltip]="'comments.editTooltip' | transloco" [attr.aria-label]="'comments.editAria' | transloco"><mat-icon>edit</mat-icon></button>
+                  <button mat-icon-button (click)="remove(c)" [matTooltip]="'comments.deleteTooltip' | transloco" [attr.aria-label]="'comments.deleteAria' | transloco"><mat-icon>delete</mat-icon></button>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      } @empty {
+        <p class="muted empty">{{ 'comments.empty' | transloco }}</p>
+      }
+    </div>
+  }
+
+  <div class="composer">
+    <mat-form-field class="w-100">
+      <mat-label>{{ 'comments.placeholder' | transloco }}</mat-label>
+      <textarea matInput rows="2" [ngModel]="text()" (ngModelChange)="text.set($event)" maxlength="2000"
+                (keydown.control.enter)="send()"></textarea>
+      <mat-hint>{{ 'comments.hint' | transloco }}</mat-hint>
+    </mat-form-field>
+    <button mat-flat-button class="btn-gradient" (click)="send()" [disabled]="!text().trim() || busy()">
+      <mat-icon>send</mat-icon> {{ 'common.send' | transloco }}
+    </button>
+  </div>
+</div>

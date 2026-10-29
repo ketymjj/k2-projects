@@ -14,9 +14,12 @@ import { t } from '../../core/i18n/i18n-state';
 import { ProjectsApi, TasksApi } from '../../core/services/api.services';
 import { DataEventsService } from '../../core/services/data-events.service';
 import { ToastService } from '../../core/services/toast.service';
-import { AvatarComponent, PriorityBadgeComponent } from '../../shared/components/badges.component';
-import { PageHeaderComponent } from '../../shared/components/page-header.component';
-import { EmptyStateComponent, ErrorStateComponent, LoadingComponent } from '../../shared/components/states.component';
+import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
+import { PriorityBadgeComponent } from '../../shared/components/priority-badge/priority-badge.component';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { ErrorStateComponent } from '../../shared/components/error-state/error-state.component';
+import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { TASK_STATUSES, optionOf } from '../../shared/models/labels';
 import { ProjectLookup, TaskItem, TaskStatus } from '../../shared/models/models';
 import { apiErrorMessage, formatDate } from '../../shared/utils';
@@ -31,105 +34,8 @@ const STORAGE_KEY = 'k2.kanban.project';
     MatButtonModule, MatIconModule, MatTooltipModule, MatProgressBarModule, TranslocoPipe, PageHeaderComponent, LoadingComponent,
     ErrorStateComponent, EmptyStateComponent, AvatarComponent, PriorityBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="page">
-      <k2-page-header [title]="'kanban.title' | transloco" [subtitle]="'kanban.subtitle' | transloco">
-        <mat-form-field class="project-select" subscriptSizing="dynamic">
-          <mat-label>{{ 'common.project' | transloco }}</mat-label>
-          <mat-select [ngModel]="projectId()" (ngModelChange)="selectProject($event)">
-            @for (p of projects(); track p.id) { <mat-option [value]="p.id">{{ p.name }}</mat-option> }
-          </mat-select>
-        </mat-form-field>
-        @if (canManage()) {
-          <button mat-flat-button class="btn-gradient" (click)="create('AFazer')"><mat-icon>add</mat-icon> {{ 'tasks.new' | transloco }}</button>
-        }
-      </k2-page-header>
-
-      @if (loadingProjects()) {
-        <k2-loading />
-      } @else if (projects().length === 0) {
-        <div class="card"><k2-empty icon="view_kanban" [title]="'kanban.noProjectsTitle' | transloco" [message]="'kanban.noProjectsMessage' | transloco" /></div>
-      } @else if (error()) {
-        <div class="card"><k2-error [message]="errorText()" (retry)="loadBoard()" /></div>
-      } @else {
-        @if (loading()) { <mat-progress-bar mode="indeterminate" class="bar" /> }
-        <div class="board" cdkDropListGroup>
-          @for (col of statuses; track col.value) {
-            <section class="column">
-              <header class="col-head">
-                <span class="dot" [style.background]="col.color"></span>
-                <h3>{{ col.labelKey | transloco }}</h3>
-                <span class="count">{{ columns()[col.value].length }}</span>
-                <span class="spacer"></span>
-                @if (canManage()) {
-                  <button mat-icon-button (click)="create(col.value)"
-                          [matTooltip]="'kanban.newIn' | transloco: { column: (col.labelKey | transloco) }"
-                          [attr.aria-label]="'kanban.newIn' | transloco: { column: (col.labelKey | transloco) }"><mat-icon>add</mat-icon></button>
-                }
-              </header>
-              <div class="list" cdkDropList [id]="col.value" [cdkDropListData]="columns()[col.value]" (cdkDropListDropped)="drop($event)">
-                @for (task of columns()[col.value]; track task.id) {
-                  <article class="card task" cdkDrag [cdkDragData]="task" [cdkDragDisabled]="!task.canChangeStatus || saving()"
-                           [class.overdue]="task.isOverdue" [class.locked]="!task.canChangeStatus" (click)="open(task)"
-                           (cdkDragEnded)="lastDragEnd = now()">
-                    <div class="task-placeholder" *cdkDragPlaceholder></div>
-                    <div class="top">
-                      <k2-priority [priority]="task.priority" />
-                      @if (task.isOverdue) { <span class="late"><mat-icon>alarm</mat-icon> {{ 'tasks.detail.overdue' | transloco }}</span> }
-                      @if (!task.canChangeStatus) { <mat-icon class="lock" [matTooltip]="'kanban.locked' | transloco">lock</mat-icon> }
-                    </div>
-                    <h4 [class.done]="task.status === 'Concluido'">{{ task.title }}</h4>
-                    @if (task.parentTaskTitle) { <div class="parent muted small"><mat-icon>subdirectory_arrow_right</mat-icon>{{ task.parentTaskTitle }}</div> }
-                    <footer>
-                      <span class="due" [class.text-danger]="task.isOverdue"><mat-icon>event</mat-icon>{{ fmt(task.dueDate) }}</span>
-                      @if (task.subtaskCount) { <span class="meta"><mat-icon>account_tree</mat-icon>{{ task.completedSubtaskCount }}/{{ task.subtaskCount }}</span> }
-                      @if (task.commentCount) { <span class="meta"><mat-icon>chat_bubble</mat-icon>{{ task.commentCount }}</span> }
-                      <span class="spacer"></span>
-                      <k2-avatar [name]="task.assignedToName" [size]="26" [tooltip]="true" />
-                    </footer>
-                  </article>
-                } @empty {
-                  <div class="empty-col muted small">{{ 'kanban.dropHere' | transloco }}</div>
-                }
-              </div>
-            </section>
-          }
-        </div>
-      }
-    </div>
-  `,
-  styles: `
-    .project-select { min-width: 260px; }
-    .bar { margin-bottom: 8px; border-radius: 4px; }
-    .board { display: grid; grid-template-columns: repeat(3, minmax(280px, 1fr)); gap: 16px; align-items: start; overflow-x: auto; padding-bottom: 8px; }
-    .column { background: var(--k2-surface-2); border: 1px solid var(--k2-border); border-radius: var(--k2-radius); padding: 12px; min-height: 300px; }
-    .col-head { display: flex; align-items: center; gap: 8px; padding: 0 4px 10px; }
-    .col-head h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
-    .col-head .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .count { background: var(--k2-surface); border: 1px solid var(--k2-border); border-radius: 99px; padding: 0 8px; font-size: 12px; font-weight: 600; color: var(--k2-text-2); }
-    .list { min-height: 220px; display: flex; flex-direction: column; gap: 10px; border-radius: 10px; transition: background .15s; }
-    .list.cdk-drop-list-receiving, .list.cdk-drop-list-dragging { background: color-mix(in srgb, var(--k2-primary) 6%, transparent); }
-    .task { padding: 12px 14px; cursor: grab; transition: box-shadow .15s, transform .15s; border-left: 4px solid transparent; }
-    .task:hover { box-shadow: var(--k2-shadow-lg); }
-    .task.locked { cursor: pointer; }
-    .task.overdue { border-left-color: var(--k2-danger); }
-    .top { display: flex; align-items: center; gap: 8px; }
-    .late { display: inline-flex; align-items: center; gap: 2px; color: var(--k2-danger); font-size: 12px; font-weight: 600; }
-    .late mat-icon, .lock { font-size: 15px; width: 15px; height: 15px; }
-    .lock { margin-left: auto; color: var(--k2-text-muted); }
-    h4 { font-size: 14px; font-weight: 600; margin: 10px 0 6px; line-height: 1.35; }
-    h4.done { text-decoration: line-through; color: var(--k2-text-muted); }
-    .parent { display: flex; align-items: center; gap: 2px; margin-bottom: 6px; }
-    .parent mat-icon { font-size: 14px; width: 14px; height: 14px; }
-    footer { display: flex; align-items: center; gap: 10px; color: var(--k2-text-muted); font-size: 12px; margin-top: 6px; }
-    .due, .meta { display: inline-flex; align-items: center; gap: 3px; }
-    footer mat-icon { font-size: 15px; width: 15px; height: 15px; }
-    .empty-col { border: 2px dashed var(--k2-border); border-radius: 10px; padding: 24px; text-align: center; }
-    .task-placeholder { min-height: 80px; border: 2px dashed var(--k2-primary); border-radius: 12px; background: var(--k2-primary-soft); }
-    .cdk-drag-preview { box-shadow: var(--k2-shadow-lg); transform: rotate(2deg); }
-    .cdk-drag-animating, .list.cdk-drop-list-dragging .task:not(.cdk-drag-placeholder) { transition: transform 200ms cubic-bezier(0, 0, 0.2, 1); }
-    @media (max-width: 960px) { .board { grid-template-columns: repeat(3, 85vw); } }
-  `,
+  templateUrl: './kanban.component.html',
+  styleUrl: './kanban.component.scss',
 })
 export class KanbanComponent {
   private readonly projectsApi = inject(ProjectsApi);

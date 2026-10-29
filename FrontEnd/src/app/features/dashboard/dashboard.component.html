@@ -1,0 +1,91 @@
+<div class="page">
+  <k2-page-header [title]="'dashboard.title' | transloco" [subtitle]="'dashboard.subtitle' | transloco">
+    <button mat-stroked-button (click)="load()" [disabled]="loading()"><mat-icon>refresh</mat-icon> {{ 'common.refresh' | transloco }}</button>
+  </k2-page-header>
+
+  @if (loading() && !data()) {
+    <k2-loading [message]="'dashboard.loading' | transloco" />
+  } @else if (error() && !data()) {
+    <div class="card"><k2-error [message]="errorText()" (retry)="load()" /></div>
+  } @else if (data(); as d) {
+    @if (loading()) { <mat-progress-bar mode="indeterminate" class="bar" /> }
+
+    <div class="kpis">
+      @for (k of kpis(); track k.labelKey) {
+        <div class="card kpi">
+          <span class="kpi-icon" [attr.data-tone]="k.tone"><mat-icon>{{ k.icon }}</mat-icon></span>
+          <div>
+            <div class="kpi-value">{{ num(k.value) }}</div>
+            <div class="kpi-label">{{ k.labelKey | transloco }}</div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="charts">
+      <div class="card card-pad">
+        <div class="card-title"><mat-icon>donut_large</mat-icon> {{ 'dashboard.charts.byStatus' | transloco }}</div>
+        @if (d.totalTasks) {
+          <div class="chart-with-legend">
+            <k2-chart [config]="statusChart()" [height]="190" [label]="'dashboard.charts.byStatus' | transloco" />
+            <ul class="legend">
+              @for (s of statusLegend(); track s.label) {
+                <li><i [style.background]="s.color"></i>{{ s.label }}<strong>{{ s.count }}</strong></li>
+              }
+            </ul>
+          </div>
+        } @else { <k2-empty icon="donut_large" [title]="'dashboard.charts.noTasks' | transloco" /> }
+      </div>
+      <div class="card card-pad">
+        <div class="card-title"><mat-icon>bar_chart</mat-icon> {{ 'dashboard.charts.byPriority' | transloco }}</div>
+        @if (d.totalTasks) {
+          <k2-chart [config]="priorityChart()" [height]="230" [label]="'dashboard.charts.byPriority' | transloco" />
+        } @else { <k2-empty icon="bar_chart" [title]="'dashboard.charts.noTasks' | transloco" /> }
+      </div>
+      <div class="card card-pad">
+        <div class="card-title"><mat-icon>stacked_bar_chart</mat-icon> {{ 'dashboard.charts.projectProgress' | transloco }}</div>
+        @if (d.projectProgress.length) {
+          <k2-chart [config]="progressChart()" [height]="230" [label]="'dashboard.charts.projectProgress' | transloco" />
+        } @else { <k2-empty icon="folder_open" [title]="'dashboard.charts.noProjects' | transloco" /> }
+      </div>
+    </div>
+
+    <div class="lists">
+      <div class="card card-pad">
+        <div class="card-title"><mat-icon>upcoming</mat-icon> {{ 'dashboard.lists.upcoming' | transloco }} <span class="spacer"></span><a routerLink="/my-tasks" class="small">{{ 'common.viewAll' | transloco }}</a></div>
+        @for (task of d.myUpcomingTasks; track task.id) {
+          <button class="item" (click)="openTask(task)">
+            <span class="item-main"><strong>{{ task.title }}</strong><span class="muted small">{{ task.projectName }}</span></span>
+            <span class="item-side">
+              <k2-priority [priority]="task.priority" />
+              <span class="small" [class.text-danger]="task.isOverdue">{{ rel(task.dueDate) }}</span>
+            </span>
+          </button>
+        } @empty { <k2-empty icon="task_alt" [title]="'dashboard.lists.noPending' | transloco" [message]="'dashboard.lists.noPendingMessage' | transloco" /> }
+      </div>
+
+      <div class="card card-pad">
+        <div class="card-title"><mat-icon class="danger-icon">alarm</mat-icon> {{ 'dashboard.lists.overdue' | transloco }}</div>
+        @for (task of d.overdueTaskList; track task.id) {
+          <button class="item" (click)="openTask(task)">
+            <span class="item-main"><strong>{{ task.title }}</strong><span class="muted small">{{ task.projectName }} · {{ 'dashboard.lists.dueOn' | transloco: { date: fmt(task.dueDate) } }}</span></span>
+            <k2-avatar [name]="task.assignedToName" [size]="28" [tooltip]="true" />
+          </button>
+        } @empty { <k2-empty icon="verified" [title]="'dashboard.lists.noOverdue' | transloco" /> }
+      </div>
+
+      <div class="card card-pad">
+        <div class="card-title"><mat-icon>history</mat-icon> {{ 'dashboard.lists.recent' | transloco }} <span class="spacer"></span><a routerLink="/projects" class="small">{{ 'common.viewAllMasc' | transloco }}</a></div>
+        @for (p of d.recentProjects; track p.id) {
+          <button class="item" (click)="openProject(p.id)">
+            <span class="item-main">
+              <strong>{{ p.name }}</strong>
+              <span class="prog"><span class="progress"><span [style.width.%]="p.progress"></span></span><span class="small">{{ p.progress }}%</span></span>
+            </span>
+            <k2-project-status [status]="p.status" />
+          </button>
+        } @empty { <k2-empty icon="folder_open" [title]="'dashboard.lists.noProjects' | transloco" /> }
+      </div>
+    </div>
+  }
+</div>

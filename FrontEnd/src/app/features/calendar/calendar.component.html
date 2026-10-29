@@ -1,0 +1,76 @@
+<div class="page">
+  <k2-page-header [title]="'calendar.title' | transloco" [subtitle]="'calendar.subtitle' | transloco">
+    @if (auth.canCreateProjects()) {
+      <button mat-flat-button class="btn-gradient" (click)="create()"><mat-icon>add</mat-icon> {{ 'tasks.new' | transloco }}</button>
+    }
+  </k2-page-header>
+
+  <div class="card">
+    <div class="cal-toolbar">
+      <div class="nav">
+        <button mat-icon-button (click)="move(-1)" [attr.aria-label]="'calendar.previous' | transloco"><mat-icon>chevron_left</mat-icon></button>
+        <button mat-stroked-button (click)="goToday()">{{ 'common.today' | transloco }}</button>
+        <button mat-icon-button (click)="move(1)" [attr.aria-label]="'calendar.next' | transloco"><mat-icon>chevron_right</mat-icon></button>
+        <h2>{{ periodLabel() }}</h2>
+      </div>
+      <span class="spacer"></span>
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>{{ 'common.project' | transloco }}</mat-label>
+        <mat-select [ngModel]="projectId()" (ngModelChange)="projectId.set($event); load()">
+          <mat-option [value]="null">{{ 'common.all' | transloco }}</mat-option>
+          @for (p of projects(); track p.id) { <mat-option [value]="p.id">{{ p.name }}</mat-option> }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>{{ 'common.assignee' | transloco }}</mat-label>
+        <mat-select [ngModel]="assigneeId()" (ngModelChange)="assigneeId.set($event); load()">
+          <mat-option [value]="null">{{ 'common.all' | transloco }}</mat-option>
+          @for (u of users(); track u.id) { <mat-option [value]="u.id">{{ u.name }}</mat-option> }
+        </mat-select>
+      </mat-form-field>
+      <mat-button-toggle-group [value]="view()" (change)="setView($event.value)" hideSingleSelectionIndicator>
+        <mat-button-toggle value="month">{{ 'calendar.monthly' | transloco }}</mat-button-toggle>
+        <mat-button-toggle value="week">{{ 'calendar.weekly' | transloco }}</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <div class="legend small">
+      @for (p of priorities; track p.value) { <span><i [style.background]="p.color"></i>{{ p.labelKey | transloco }}</span> }
+      <span><mat-icon class="late-icon">alarm</mat-icon>{{ 'calendar.overdue' | transloco }}</span>
+      <span class="muted">· {{ 'calendar.tasksInPeriod' | transloco: { count: tasks().length } }}</span>
+    </div>
+
+    @if (loading()) { <mat-progress-bar mode="indeterminate" /> }
+
+    <div class="weekdays" [class.week]="view() === 'week'">
+      @for (w of weekdays(); track $index) { <div>{{ w }}</div> }
+    </div>
+    <div class="grid" [class.week]="view() === 'week'">
+      @for (day of days(); track day.iso) {
+        <div class="day" [class.out]="!day.inPeriod" [class.today]="day.isToday">
+          <div class="day-head">
+            <span class="num">{{ day.date.getDate() }}</span>
+            @if (view() === 'week') { <span class="muted small">{{ shortMonth(day.date) }}</span> }
+            <span class="spacer"></span>
+            @if (auth.canCreateProjects()) {
+              <button class="add" (click)="create(day.iso)" [matTooltip]="'calendar.newOnDate' | transloco" [attr.aria-label]="'calendar.newOnDate' | transloco"><mat-icon>add</mat-icon></button>
+            }
+          </div>
+          <div class="items">
+            @for (task of visibleTasks(day); track task.id) {
+              <button class="chip" [style.--c]="prioColor(task)" [class.overdue]="task.isOverdue" [class.done]="task.status === 'Concluido'"
+                      (click)="open(task)" [matTooltip]="task.projectName + ' · ' + (task.assignedToName ?? ('common.noAssignee' | transloco))">
+                @if (task.isOverdue) { <mat-icon>alarm</mat-icon> }
+                @else if (task.status === 'Concluido') { <mat-icon>check</mat-icon> }
+                <span>{{ task.title }}</span>
+              </button>
+            }
+            @if (hiddenCount(day) > 0) {
+              <button class="more" (click)="expand(day.iso)">{{ 'calendar.more' | transloco: { count: hiddenCount(day) } }}</button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

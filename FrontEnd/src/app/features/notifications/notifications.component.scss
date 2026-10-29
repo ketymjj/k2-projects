@@ -1,0 +1,7 @@
+.head { padding-bottom: 8px; }
+.notif { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-top: 1px solid var(--k2-border); }
+.notif.unread { background: color-mix(in srgb, var(--k2-primary) 5%, transparent); box-shadow: inset 3px 0 0 var(--k2-primary); }
+.icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; }
+.text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.actions { display: flex; align-items: center; gap: 4px; }
+@media (max-width: 640px) { .notif { flex-wrap: wrap; } .actions { width: 100%; justify-content: flex-end; } }

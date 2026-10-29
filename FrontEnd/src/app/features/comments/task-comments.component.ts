@@ -9,9 +9,9 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { t } from '../../core/i18n/i18n-state';
 import { TasksApi } from '../../core/services/api.services';
 import { ToastService } from '../../core/services/toast.service';
-import { AvatarComponent } from '../../shared/components/badges.component';
-import { ConfirmService } from '../../shared/components/confirm-dialog.component';
-import { LoadingComponent } from '../../shared/components/states.component';
+import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
+import { ConfirmService } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { TaskComment } from '../../shared/models/models';
 import { formatDateLong, timeAgo } from '../../shared/utils';
 
@@ -21,78 +21,8 @@ import { formatDateLong, timeAgo } from '../../shared/utils';
   imports: [FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatTooltipModule, TranslocoPipe,
     AvatarComponent, LoadingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="comments">
-      <div class="title"><mat-icon>forum</mat-icon> {{ 'comments.title' | transloco }} <span class="muted">({{ comments().length }})</span></div>
-
-      @if (loading()) {
-        <k2-loading [message]="'comments.loading' | transloco" />
-      } @else {
-        <div class="thread" #thread>
-          @for (c of comments(); track c.id) {
-            <div class="msg" [class.mine]="c.isMine">
-              <k2-avatar [name]="c.userName" [size]="30" />
-              <div class="bubble">
-                <div class="meta">
-                  <strong>{{ c.userName }}</strong>
-                  <span class="muted small" [matTooltip]="fullDate(c.createdAt)">{{ ago(c.createdAt) }}@if (c.updatedAt) { · {{ 'common.edited' | transloco }} }</span>
-                </div>
-                @if (editingId() === c.id) {
-                  <mat-form-field class="w-100 edit">
-                    <textarea matInput rows="2" [ngModel]="editText()" (ngModelChange)="editText.set($event)" maxlength="2000"></textarea>
-                  </mat-form-field>
-                  <div class="row edit-actions">
-                    <button mat-button (click)="editingId.set(null)">{{ 'common.cancel' | transloco }}</button>
-                    <button mat-flat-button (click)="saveEdit(c)" [disabled]="!editText().trim() || busy()">{{ 'common.save' | transloco }}</button>
-                  </div>
-                } @else {
-                  <p>{{ c.content }}</p>
-                  @if (c.isMine) {
-                    <div class="actions">
-                      <button mat-icon-button (click)="startEdit(c)" [matTooltip]="'comments.editTooltip' | transloco" [attr.aria-label]="'comments.editAria' | transloco"><mat-icon>edit</mat-icon></button>
-                      <button mat-icon-button (click)="remove(c)" [matTooltip]="'comments.deleteTooltip' | transloco" [attr.aria-label]="'comments.deleteAria' | transloco"><mat-icon>delete</mat-icon></button>
-                    </div>
-                  }
-                }
-              </div>
-            </div>
-          } @empty {
-            <p class="muted empty">{{ 'comments.empty' | transloco }}</p>
-          }
-        </div>
-      }
-
-      <div class="composer">
-        <mat-form-field class="w-100">
-          <mat-label>{{ 'comments.placeholder' | transloco }}</mat-label>
-          <textarea matInput rows="2" [ngModel]="text()" (ngModelChange)="text.set($event)" maxlength="2000"
-                    (keydown.control.enter)="send()"></textarea>
-          <mat-hint>{{ 'comments.hint' | transloco }}</mat-hint>
-        </mat-form-field>
-        <button mat-flat-button class="btn-gradient" (click)="send()" [disabled]="!text().trim() || busy()">
-          <mat-icon>send</mat-icon> {{ 'common.send' | transloco }}
-        </button>
-      </div>
-    </div>
-  `,
-  styles: `
-    .title { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-bottom: 12px; }
-    .thread { display: flex; flex-direction: column; gap: 12px; max-height: 320px; overflow-y: auto; padding: 4px 2px; }
-    .msg { display: flex; gap: 10px; align-items: flex-start; }
-    .msg.mine { flex-direction: row-reverse; }
-    .bubble { background: var(--k2-surface-2); border: 1px solid var(--k2-border); border-radius: 4px 14px 14px 14px; padding: 8px 12px; max-width: 80%; position: relative; }
-    .mine .bubble { background: var(--k2-primary-soft); border-color: transparent; border-radius: 14px 4px 14px 14px; }
-    .meta { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-    .bubble p { margin: 4px 0 0; white-space: pre-wrap; word-break: break-word; line-height: 1.45; }
-    .actions { display: flex; justify-content: flex-end; margin: 0 -8px -6px 0; }
-    .actions button { transform: scale(0.8); }
-    .edit { margin-top: 6px; }
-    .edit-actions { justify-content: flex-end; }
-    .empty { text-align: center; padding: 12px; }
-    .composer { display: flex; gap: 12px; align-items: flex-start; margin-top: 12px; }
-    .composer button { margin-top: 8px; flex-shrink: 0; }
-    @media (max-width: 560px) { .composer { flex-direction: column; align-items: stretch; } }
-  `,
+  templateUrl: './task-comments.component.html',
+  styleUrl: './task-comments.component.scss',
 })
 export class TaskCommentsComponent {
   readonly taskId = input.required<string>();

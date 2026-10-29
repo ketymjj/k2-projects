@@ -1,0 +1,5 @@
+<div class="state">
+  <mat-icon>error_outline</mat-icon>
+  <strong>{{ message() ?? ('states.errorLoad' | transloco) }}</strong>
+  <button mat-stroked-button (click)="retry.emit()"><mat-icon>refresh</mat-icon> {{ 'common.retry' | transloco }}</button>
+</div>
